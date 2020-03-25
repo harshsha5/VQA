@@ -147,7 +147,7 @@ Let's start with the network structure. This paper uses the output of pretrained
 
 1. Resizing to fit network input size;
 1. Normalize to [0, 1] and convert from (H, W, 3) to (3, H, W);
-1. Substract mean [0.485, 0.456, 0.406] and divide by standard deviation [0.229, 0.224, 0.225] computed from ImageNet for each channel.
+1. Subtract mean [0.485, 0.456, 0.406] and divide by standard deviation [0.229, 0.224, 0.225] computed from ImageNet for each channel.
 
 Hint: check out `torchvision.transforms.Compose` and `torchvision.transforms.ToTensor`.
 
