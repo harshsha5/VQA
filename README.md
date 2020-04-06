@@ -18,6 +18,7 @@ In this assignment you will do three main things:
 
 * Please submit your report as well as your code.
 * At the beginning of the report, please include a section which lists all the commands for TAs to run your code.
+* You should include a Google Drive link to download your trained models and tensorboard files.
 * You should also mention any collaborators or other sources used for different parts of the assignment.
 
 ## Software setup
@@ -245,6 +246,13 @@ creativity here; not all interesting ideas work out.
 
 ## Submission Checklist 
 ### Report
+
+List of commands to run your code
+
+Google Drive Link to your model and tensorboard file
+
+Specification of collaborators and other sources
+
 Your response to questions
 
 * 1.1 (4 pts)
