@@ -6,7 +6,7 @@
 - TAs: [Nadine Chang](http://nadinechang.com), [Yufei Ye](https://judyye.github.io/), [Donglai Xiang](https://xiangdonglai.github.io/)
 - Please post questions, if any, on the piazza for HW3.
 - Total points: 100 + 10 (bonus)
-- Due Date: April 13, 2020 at 11:59pm EST.
+- Due Date: April 20, 2020 at 11:59pm EST.
 
 In this assignment you will do three main things: 
 
