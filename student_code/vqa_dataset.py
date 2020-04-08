@@ -1,6 +1,14 @@
 from torch.utils.data import Dataset
 from external.vqa.vqa import VQA
+import re
+from collections import Counter
+import ipdb
 
+def convert_to_dict(tuple_list):
+    d = {}
+    for i,(key,value) in enumerate(tuple_list):
+        d[key] = i
+    return d
 
 class VqaDataset(Dataset):
     """
@@ -38,28 +46,39 @@ class VqaDataset(Dataset):
             except OSError:
                 pass
 
+        #1.1-1.3 Task
+        
+
+        # question_list = [self._vqa.qqa[4870250]['question'],self._vqa.qqa[4870251]['question']]
+        # self.word_list = self._create_word_list(question_list)
+        # id_map = self._create_id_map(self.word_list,self.question_word_list_length)
+        # self.question_id_list = self._vqa.getQuesIds())
         # Create the question map if necessary
         if question_word_to_id_map is None:
             ############ 1.6 TODO
-
-
+            question_list = []
+            for question_id in self._vqa.getQuesIds():
+                question_list.append(self._vqa.qqa[question_id]['question'])
+            word_list = self._create_word_list(question_list)
+            self.question_word_to_id_map = self._create_id_map(word_list,self.question_word_list_length)
             ############
-            raise NotImplementedError()
         else:
             self.question_word_to_id_map = question_word_to_id_map
 
         # Create the answer map if necessary
         if answer_to_id_map is None:
             ############ 1.7 TODO
-
-
+            answer_list = []
+            for annotation in self._vqa.dataset['annotations']:
+                for ans in annotation['answers']:
+                    answer_list.append(ans['answer'])
+            self.answer_to_id_map = self._create_id_map(answer_list,self.answer_list_length)
             ############
-            raise NotImplementedError()
         else:
             self.answer_to_id_map = answer_to_id_map
 
 
-     def _create_word_list(self, sentences):
+    def _create_word_list(self, sentences):
         """
         Turn a list of sentences into a list of processed words (no punctuation, lowercase, etc)
         Args:
@@ -67,13 +86,16 @@ class VqaDataset(Dataset):
         Return:
             A list of str, words from the split, order remained.
         """
-
+        regex = re.compile('[,\.!?""'']')
+        word_list = []
         ############ 1.4 TODO
-
-
-        ############
-        raise NotImplementedError()
-
+        for sentence in sentences:
+            sentence = regex.sub('', sentence)
+            sentence = sentence.lower()
+            sentence = sentence.split() 
+            for word in sentence:
+                word_list.append(word)
+        return word_list
 
     def _create_id_map(self, word_list, max_list_length):
         """
@@ -84,12 +106,11 @@ class VqaDataset(Dataset):
         Return:
             A map (dict) from str to id (rank)
         """
-
         ############ 1.5 TODO
-
-
+        dict_counter = Counter(word_list) 
+        most_occur = dict_counter.most_common(max_list_length)
+        return convert_to_dict(most_occur)
         ############
-        raise NotImplementedError()
 
 
     def __len__(self):
