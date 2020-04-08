@@ -47,12 +47,11 @@ class VqaDataset(Dataset):
                 pass
 
         #1.1-1.3 Task
-        
+        print("Number of Question ID's are: ",len(self._vqa.getQuesIds()))  #1.1
+        # self._vqa.showQA(self._vqa.loadQA(409380))  #1.2
+        # print("Image ID associated with Question ID: 409380 is ",self._vqa.qa[409380]['image_id']) #1.2
+        # print("Most voted answer is: ",self.get_most_voted_answer(409380)) #1.3
 
-        # question_list = [self._vqa.qqa[4870250]['question'],self._vqa.qqa[4870251]['question']]
-        # self.word_list = self._create_word_list(question_list)
-        # id_map = self._create_id_map(self.word_list,self.question_word_list_length)
-        # self.question_id_list = self._vqa.getQuesIds())
         # Create the question map if necessary
         if question_word_to_id_map is None:
             ############ 1.6 TODO
@@ -76,6 +75,15 @@ class VqaDataset(Dataset):
             ############
         else:
             self.answer_to_id_map = answer_to_id_map
+
+    def get_most_voted_answer(self,question_id):
+        cnt = Counter()
+        annotation = self._vqa.loadQA(question_id)
+        assert(len(annotation)==1)
+        answers = annotation[0]['answers']
+        for elt in answers:
+            cnt[elt['answer']] += 1
+        return cnt.most_common(1)[0][0]
 
 
     def _create_word_list(self, sentences):
