@@ -143,6 +143,25 @@ class VQA:
             for ans in ann['answers']:
                 print("Answer %d: %s" % (ans['answer_id'], ans['answer']))
 
+    def get_QA(self,anns):
+        """User defined function which allows to retrieve the question and answer given the annotations. Its based on the showQA function itself
+        :param anns (array of object): annotations to display
+        :return: List of Questions, List of List of Answers
+        """
+        if len(anns) == 0:
+            return None,None
+        question_list = []
+        answers_list = []
+        for ann in anns:
+            quesId = ann['question_id']
+            question_list.append(self.qqa[quesId]['question'])
+            answer_to_question_list = []
+            for ans in ann['answers']:
+                answer_to_question_list.append(ans['answer'])
+            answers_list.append(answer_to_question_list)
+        return question_list,answers_list
+
+
     def loadRes(self, resFile, quesFile):
         """
         Load result file and return a result object.
