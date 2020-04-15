@@ -240,7 +240,7 @@ class VqaDataset(Dataset):
             fpath = self._image_dir + "/" + self._image_filename_pattern.replace("{}", str(image_name))
             img = Image.open(fpath)
             if(self._transform is not None):
-                img = self.transform(img)       #Make sure to_tensor is in the transform function
+                img = self._transform(img)       #Make sure to_tensor is in the transform function
             else:
                 img = torchvision.transforms.ToTensor()(img)
             ############
@@ -251,7 +251,6 @@ class VqaDataset(Dataset):
         question_list,answer_list = self._vqa.get_QA(self._vqa.loadQA(question_ID))
         question_tensors = self.encode_questions(question_list)
         answer_tensors = self.encode_answers(answer_list)
-        ipdb.set_trace()
         ############
         return {"image":img,
                 "questions":question_tensors,
