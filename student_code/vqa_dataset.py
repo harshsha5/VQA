@@ -36,7 +36,8 @@ class VqaDataset(Dataset):
         self._transform = transform
         self._max_question_length = 26
         self._num_answers_for_each_question = 10
-        self.imIDs = self._vqa.getImgIds()
+        self.qIDs = self._vqa.getQuesIds()
+        # self.imIDs = self._vqa.getImgIds()
         self.image_id_net_length = 12           #Check if this is the correct method
 
         # Publicly accessible dataset parameters
@@ -79,6 +80,7 @@ class VqaDataset(Dataset):
             for annotation in self._vqa.dataset['annotations']:
                 for ans in annotation['answers']:
                     answer_list.append(ans['answer'])
+            answer_list = self._clean_sentences(answer_list)       
             self.answer_to_id_map = self._create_id_map(answer_list,self.answer_list_length)
             ############
         else:
@@ -112,6 +114,21 @@ class VqaDataset(Dataset):
             for word in sentence:
                 word_list.append(word)
         return word_list
+
+    def _clean_sentences(self,sentences):
+        """
+        Cleans a list of sentences into a list of processed sentences (no punctuation, lowercase, etc)
+        Args:
+            sentences: a list of str, sentences to be splitted into words
+        Return:
+            A list of str, cleaned sentences, order remained.
+        """
+        regex = re.compile('[,\.!?""'']')
+        for i,sentence in enumerate(sentences):
+            sentence = regex.sub('', sentence)
+            sentence = sentence.lower()
+            sentences[i] = sentence
+        return sentences
 
     def _create_id_map(self, word_list, max_list_length):
         """
@@ -150,7 +167,7 @@ class VqaDataset(Dataset):
 
     def encode_questions(self,question_list):
         '''
-        Converts the  question_list to  a tensor representation. Each question is represented as a self._max_question_length*_max_question_length tensor. 
+        Converts the  question_list to a tensor representation. Each question is represented as a self._max_question_length*_max_question_length tensor. 
         For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
         '''
         for i,elt in enumerate(question_list):
@@ -160,7 +177,7 @@ class VqaDataset(Dataset):
                 if word in self.question_word_to_id_map:
                     intermediate_tensor[j,self.question_word_to_id_map[word]] = 1
                 else:
-                    intermediate_tensor[j,tensor_length-1] = 1
+                    intermediate_tensor[j,self.question_word_list_length-1] = 1
 
             if(i==0):
                 resultant_tensor = intermediate_tensor
@@ -171,16 +188,17 @@ class VqaDataset(Dataset):
 
     def encode_answers(self,answer_list):
         '''
-        Converts the  answer_list to  a tensor representation. Each question is represented as a self._num_answers_for_each_question*answer_list_length tensor. 
+        Converts the  answer_list to a tensor representation. Each question is represented as a self._num_answers_for_each_question*answer_list_length tensor. 
         For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
         '''
         for i,elt in enumerate(answer_list):
-            intermediate_tensor = torch.zeros([self._num_answers_for_each_question, self.answer_list_length], dtype=torch.int32)                
+            intermediate_tensor = torch.zeros([self._num_answers_for_each_question, self.answer_list_length], dtype=torch.int32)   
+            elt = self._clean_sentences(elt)             
             for j,sentence in enumerate(elt):
                 if sentence in self.answer_to_id_map:
                     intermediate_tensor[j,self.answer_to_id_map[sentence]] = 1
                 else:
-                    intermediate_tensor[j,tensor_length-1] = 1
+                    intermediate_tensor[j,self.answer_list_length-1] = 1
 
             if(i==0):
                 resultant_tensor = intermediate_tensor
@@ -191,7 +209,7 @@ class VqaDataset(Dataset):
               
     def __len__(self):
         ############ 1.8 TODO
-        return len(self._vqa.getImgIds())
+        return len(self._vqa.getQuesIds())
         ############
 
     def __getitem__(self, idx):
@@ -205,7 +223,8 @@ class VqaDataset(Dataset):
 
         ############ 1.9 TODO
         # figure out the idx-th item of dataset from the VQA API
-        image_id = self.imIDs[idx]
+        question_ID = self.qIDs[idx]
+        image_id = self._vqa.qa[question_ID]['image_id']
         image_name = "0" * (self.image_id_net_length - len(str(image_id))) + str(image_id)
         ############
 
@@ -228,7 +247,7 @@ class VqaDataset(Dataset):
 
         ############ 1.9 TODO
         # load and encode the question and answers, convert to torch tensors
-        question_ID = self._vqa.getQuesIds(imgIds=[image_id])
+        # question_ID = self._vqa.getQuesIds(imgIds=[image_id])
         question_list,answer_list = self._vqa.get_QA(self._vqa.loadQA(question_ID))
         question_tensors = self.encode_questions(question_list)
         answer_tensors = self.encode_answers(answer_list)
