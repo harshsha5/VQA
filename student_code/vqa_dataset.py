@@ -171,7 +171,7 @@ class VqaDataset(Dataset):
         For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
         '''
         for i,elt in enumerate(question_list):
-            intermediate_tensor = torch.zeros([self._max_question_length, self.question_word_list_length], dtype=torch.int32)                
+            intermediate_tensor = torch.zeros([self._max_question_length, self.question_word_list_length])                
             word_list = self._create_word_list([elt])
             for j,word in enumerate(word_list):
                 if word in self.question_word_to_id_map:
@@ -192,7 +192,7 @@ class VqaDataset(Dataset):
         For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
         '''
         for i,elt in enumerate(answer_list):
-            intermediate_tensor = torch.zeros([self._num_answers_for_each_question, self.answer_list_length], dtype=torch.int32)   
+            intermediate_tensor = torch.zeros([self._num_answers_for_each_question, self.answer_list_length])   
             elt = self._clean_sentences(elt)             
             for j,sentence in enumerate(elt):
                 if sentence in self.answer_to_id_map:

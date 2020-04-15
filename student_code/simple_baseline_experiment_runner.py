@@ -5,6 +5,9 @@ from student_code.vqa_dataset import VqaDataset
 # from experiment_runner_base import ExperimentRunnerBase
 # from vqa_dataset import VqaDataset
 from torchvision import transforms as transforms
+import torch
+import torch.nn.functional as F
+import ipdb
 
 
 class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
@@ -39,22 +42,36 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
                                  image_filename_pattern="COCO_val2014_{}.jpg",
                                  transform=transform,
                                  ############ 2.4 TODO: fill in the arguments
-                                 question_word_to_id_map=None,                    #Change Later
-                                 answer_to_id_map=None,                           #Change Later
+                                 question_word_to_id_map=train_dataset.question_word_to_id_map,
+                                 answer_to_id_map=train_dataset.answer_to_id_map                           
                                  ############
                                  )
 
-        model = SimpleBaselineNet()
+        model = SimpleBaselineNet(train_dataset.question_word_list_length,train_dataset.answer_list_length)
 
         super().__init__(train_dataset, val_dataset, model, batch_size, num_epochs, num_data_loader_workers)
 
+        self.SGD_lr_word_embedding = 0.8
+        self.SGD_lr_softmax_layer = 1e-2
+        self.SGD_momentum = 0.9
         ############ 2.5 TODO: set up optimizer
-
+        self.optimizer = torch.optim.SGD([{'params': self._model.get_word_embedding.parameters(), 'lr': self.SGD_lr_word_embedding},
+                                                {'params': self._model.fc.parameters(), 'lr': self.SGD_lr_softmax_layer}
+                                               ], momentum=self.SGD_momentum)
         ############
-
+        self.grad_clip = 20
+        self.softmax_weight_threshold = 20
+        self.word_embedding_layer_weight_threshold = 1500
+        self.lr_decrease_factor = 0.1
+        self.lr_decay_freq = 5
 
     def _optimize(self, predicted_answers, true_answer_ids):
         ############ 2.7 TODO: compute the loss, run back propagation, take optimization step.
-
+        self.optimizer.zero_grad()
+        loss = F.cross_entropy(input=predicted_answers,target=true_answer_ids)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self._model.parameters(), self.grad_clip)
+        self.optimizer.step()
+        self._model.get_word_embedding.weight.data.clamp_(min=-1*self.word_embedding_layer_weight_threshold, max=self.word_embedding_layer_weight_threshold)
+        self._model.fc.weight.data.clamp_(min=-1*self.softmax_weight_threshold, max=self.softmax_weight_threshold)
         ############
-        raise NotImplementedError()

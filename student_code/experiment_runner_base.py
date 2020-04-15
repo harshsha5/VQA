@@ -1,5 +1,7 @@
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 import torch
+from collections import Counter
 import ipdb
 
 
@@ -48,6 +50,14 @@ class ExperimentRunnerBase(object):
             ############
         raise NotImplementedError()
 
+    def get_most_voted_answer(self,answers):
+        '''
+        Sum up all the ten answers one hot vector. The max value here is the most popular answer. So we get it's index
+        '''
+        summed_tensors = torch.sum(answers,dim=1)
+        _,max_indices = torch.max(summed_tensors,dim=1)
+        return max_indices
+
     def train(self):
 
         for epoch in range(self._num_epochs):
@@ -60,10 +70,9 @@ class ExperimentRunnerBase(object):
                 ############ 2.6 TODO
                 # Run the model and get the ground truth answers that you'll pass to your optimizer
                 # This logic should be generic; not specific to either the Simple Baseline or CoAttention.
-
-                predicted_answer = None # TODO
-                ground_truth_answer = None # TODO
-
+                # answer_logits = F.softmax(output,dim=1)
+                predicted_answer = self._model(batch_data['image'],batch_data['questions']) # TODO
+                ground_truth_answer = self.get_most_voted_answer(batch_data['answers']) # TODO
                 ############
 
                 # Optimize the model according to the predictions
@@ -76,11 +85,15 @@ class ExperimentRunnerBase(object):
 
                     ############
 
-                if current_step % self._test_freq == 0:
-                    self._model.eval()
-                    val_accuracy = self.validate()
-                    print("Epoch: {} has val accuracy {}".format(epoch, val_accuracy))
-                    ############ 2.9 TODO
-                    # you probably want to plot something here
+                # if current_step % self._test_freq == 0:
+                #     self._model.eval()
+                #     val_accuracy = self.validate()
+                #     print("Epoch: {} has val accuracy {}".format(epoch, val_accuracy))
+                #     ############ 2.9 TODO
+                #     # you probably want to plot something here
 
-                    ############
+                #     ############
+
+                if (epoch+1) % self.lr_decay_freq==0:
+                    for param_group in self.optimizer.param_groups:
+                        param_group['lr'] = param_group['lr'] * self.lr_decrease_factor
