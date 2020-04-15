@@ -4,6 +4,7 @@ from external.vqa.vqa import VQA
 import re
 from collections import Counter
 from PIL import Image
+import torchvision
 import ipdb
 
 def convert_to_dict(tuple_list):
@@ -34,6 +35,7 @@ class VqaDataset(Dataset):
         self._image_filename_pattern = image_filename_pattern
         self._transform = transform
         self._max_question_length = 26
+        self._num_answers_for_each_question = 10
         self.imIDs = self._vqa.getImgIds()
         self.image_id_net_length = 12           #Check if this is the correct method
 
@@ -126,26 +128,67 @@ class VqaDataset(Dataset):
         return convert_to_dict(most_occur)
         ############
 
-    def encoder(self,input_sequence,tensor_length,id_map,encoder_type):
-        for i,elt in enumerate(input_sequence):
-            if(encoder_type=="question"):
-                word_list = self._create_word_list([elt])
-            elif(encoder_type=="answer"):
-                word_list = elt
-            intermediate_tensor = torch.zeros([1, tensor_length], dtype=torch.int32)
+    # def encoder(self,input_sequence,tensor_length,id_map,encoder_type):
+    #     for i,elt in enumerate(input_sequence):
+    #         if(encoder_type=="question"):
+    #             word_list = self._create_word_list([elt])
+    #         elif(encoder_type=="answer"):
+    #             word_list = elt
+    #         intermediate_tensor = torch.zeros([1, tensor_length], dtype=torch.int32)
 
-            for word in word_list:
-                if word in id_map:
-                    intermediate_tensor[0,id_map[word]] = 1
+    #         for word in word_list:
+    #             if word in id_map:
+    #                 intermediate_tensor[0,id_map[word]] = 1
+    #             else:
+    #                 intermediate_tensor[0,tensor_length-1] = 1
+
+    #         if(i==0):
+    #             resultant_tensor = intermediate_tensor
+    #         else:
+    #             resultant_tensor = torch.cat((resultant_tensor,intermediate_tensor), dim=0)
+    #     return resultant_tensor
+
+    def encode_questions(self,question_list):
+        '''
+        Converts the  question_list to  a tensor representation. Each question is represented as a self._max_question_length*_max_question_length tensor. 
+        For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
+        '''
+        for i,elt in enumerate(question_list):
+            intermediate_tensor = torch.zeros([self._max_question_length, self.question_word_list_length], dtype=torch.int32)                
+            word_list = self._create_word_list([elt])
+            for j,word in enumerate(word_list):
+                if word in self.question_word_to_id_map:
+                    intermediate_tensor[j,self.question_word_to_id_map[word]] = 1
                 else:
-                    intermediate_tensor[0,tensor_length-1] = 1
+                    intermediate_tensor[j,tensor_length-1] = 1
 
             if(i==0):
                 resultant_tensor = intermediate_tensor
             else:
                 resultant_tensor = torch.cat((resultant_tensor,intermediate_tensor), dim=0)
+
         return resultant_tensor
-                
+
+    def encode_answers(self,answer_list):
+        '''
+        Converts the  answer_list to  a tensor representation. Each question is represented as a self._num_answers_for_each_question*answer_list_length tensor. 
+        For each word a one hot vector is created (a row) in the above block. These are then stacked row-wise.
+        '''
+        for i,elt in enumerate(answer_list):
+            intermediate_tensor = torch.zeros([self._num_answers_for_each_question, self.answer_list_length], dtype=torch.int32)                
+            for j,sentence in enumerate(elt):
+                if sentence in self.answer_to_id_map:
+                    intermediate_tensor[j,self.answer_to_id_map[sentence]] = 1
+                else:
+                    intermediate_tensor[j,tensor_length-1] = 1
+
+            if(i==0):
+                resultant_tensor = intermediate_tensor
+            else:
+                resultant_tensor = torch.cat((resultant_tensor,intermediate_tensor), dim=0)
+
+        return resultant_tensor
+              
     def __len__(self):
         ############ 1.8 TODO
         return len(self._vqa.getImgIds())
@@ -179,14 +222,17 @@ class VqaDataset(Dataset):
             img = Image.open(fpath)
             if(self._transform is not None):
                 img = self.transform(img)       #Make sure to_tensor is in the transform function
+            else:
+                img = torchvision.transforms.ToTensor()(img)
             ############
 
         ############ 1.9 TODO
         # load and encode the question and answers, convert to torch tensors
         question_ID = self._vqa.getQuesIds(imgIds=[image_id])
         question_list,answer_list = self._vqa.get_QA(self._vqa.loadQA(question_ID))
-        question_tensors = self.encoder(question_list,self.question_word_list_length,self.question_word_to_id_map,"question")
-        answer_tensors = self.encoder(answer_list,self.answer_list_length,self.answer_to_id_map,"answer")
+        question_tensors = self.encode_questions(question_list)
+        answer_tensors = self.encode_answers(answer_list)
+        ipdb.set_trace()
         ############
         return {"image":img,
                 "questions":question_tensors,
