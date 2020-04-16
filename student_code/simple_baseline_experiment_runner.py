@@ -56,7 +56,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         val_dataset = VqaDataset(image_dir=test_image_dir,
                                  question_json_file_path=test_question_path,
                                  annotation_json_file_path=test_annotation_path,
-                                 image_filename_pattern="COCO_train2014_{}.jpg", #image_filename_pattern="COCO_val2014_{}.jpg",
+                                 image_filename_pattern="COCO_val2014_{}.jpg",
                                  transform=transform,
                                  ############ 2.4 TODO: fill in the arguments
                                  question_word_to_id_map=train_dataset.question_word_to_id_map,

@@ -253,6 +253,7 @@ class VqaDataset(Dataset):
             # load the image from disk, apply self._transform (if not None)
             fpath = self._image_dir + "/" + self._image_filename_pattern.replace("{}", str(image_name))
             img = Image.open(fpath)
+            img =  img.convert("RGB")
             if(self._transform is not None):
                 img = self._transform(img)       #Make sure to_tensor is in the transform function
             else:

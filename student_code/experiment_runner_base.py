@@ -14,7 +14,7 @@ class ExperimentRunnerBase(object):
     def __init__(self, train_dataset, val_dataset, model, batch_size, num_epochs, num_data_loader_workers=10, log_validation=False):
         self._model = model
         self._num_epochs = num_epochs
-        self._log_freq = 2  # Steps
+        self._log_freq = 10  # Steps
         self._test_freq = 250  # Steps
 
         self._train_dataset_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_data_loader_workers)
@@ -49,8 +49,8 @@ class ExperimentRunnerBase(object):
         for batch_id, batch_data in enumerate(self._val_dataset_loader):
             if(batch_id>=num_batches_to_validate):
                 break
-            predicted_answer = self._model(batch_data['image'],batch_data['questions']) # TODO
-            ground_truth_answer = self.get_most_voted_answer(batch_data['answers']) 
+            predicted_answer = self._model(batch_data['image'].to(self.device),batch_data['questions'].to(self.device)) # TODO
+            ground_truth_answer = self.get_most_voted_answer(batch_data['answers'].to(self.device)) 
             net_validation_loss += self._optimize(predicted_answer, ground_truth_answer)
             net_validation_accuracy += self.accuracy(predicted_answer,ground_truth_answer)
         ############
