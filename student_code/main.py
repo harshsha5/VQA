@@ -3,6 +3,7 @@ from student_code.simple_baseline_experiment_runner import SimpleBaselineExperim
 from student_code.coattention_experiment_runner import CoattentionNetExperimentRunner
 from tensorboardX import SummaryWriter
 import time
+import torch
 
 
 if __name__ == "__main__":
@@ -22,7 +23,12 @@ if __name__ == "__main__":
     parser.add_argument('--cache_location', type=str, default="")
     parser.add_argument('--lr', type=float, default=4e-4)
     parser.add_argument('--log_validation', action='store_true')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disables CUDA training')
     args = parser.parse_args()
+
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
 
     if args.model == "simple":
         experiment_runner_class = SimpleBaselineExperimentRunner
@@ -48,6 +54,7 @@ if __name__ == "__main__":
                                                 lr=args.lr,
                                                 log_validation=args.log_validation,
                                                 writer=writer,
-                                                use_saved_dictionaries=args.use_saved_dictionaries)
+                                                use_saved_dictionaries=args.use_saved_dictionaries,
+                                                device=device)
     experiment_runner.train()
     writer.close()

@@ -22,7 +22,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
     """
     def __init__(self, train_image_dir, train_question_path, train_annotation_path,
                  test_image_dir, test_question_path,test_annotation_path, batch_size, num_epochs,
-                 num_data_loader_workers, cache_location, lr, log_validation,writer,use_saved_dictionaries):
+                 num_data_loader_workers, cache_location, lr, log_validation,writer,use_saved_dictionaries,device):
 
         ############ 2.3 TODO: set up transform
 
@@ -41,6 +41,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
           answer_to_id_map = None
 
         ############
+        self.device=device
 
         train_dataset = VqaDataset(image_dir=train_image_dir,
                                    question_json_file_path=train_question_path,

@@ -85,8 +85,8 @@ class ExperimentRunnerBase(object):
                 # Run the model and get the ground truth answers that you'll pass to your optimizer
                 # This logic should be generic; not specific to either the Simple Baseline or CoAttention.
                 # answer_logits = F.softmax(output,dim=1)
-                predicted_answer = self._model(batch_data['image'],batch_data['questions']) # TODO
-                ground_truth_answer = self.get_most_voted_answer(batch_data['answers']) # TODO
+                predicted_answer = self._model(batch_data['image'].to(self.device),batch_data['questions'].to(self.device)) # TODO
+                ground_truth_answer = self.get_most_voted_answer(batch_data['answers'].to(self.device)) # TODO
                 ############
 
                 # Optimize the model according to the predictions
