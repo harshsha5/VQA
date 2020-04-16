@@ -1,6 +1,8 @@
 import argparse
 from student_code.simple_baseline_experiment_runner import SimpleBaselineExperimentRunner
 from student_code.coattention_experiment_runner import CoattentionNetExperimentRunner
+from tensorboardX import SummaryWriter
+import time
 
 
 if __name__ == "__main__":
@@ -28,6 +30,10 @@ if __name__ == "__main__":
     else:
         raise ModuleNotFoundError()
 
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    save_path = "runs/"+timestr+'/'
+    writer = SummaryWriter(save_path)
+
     experiment_runner = experiment_runner_class(train_image_dir=args.train_image_dir,
                                                 train_question_path=args.train_question_path,
                                                 train_annotation_path=args.train_annotation_path,
@@ -39,5 +45,7 @@ if __name__ == "__main__":
                                                 num_data_loader_workers=args.num_data_loader_workers,
                                                 cache_location=args.cache_location,
                                                 lr=args.lr,
-                                                log_validation=args.log_validation)
+                                                log_validation=args.log_validation,
+                                                writer=writer)
     experiment_runner.train()
+    writer.close()

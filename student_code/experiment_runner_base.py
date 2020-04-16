@@ -14,7 +14,7 @@ class ExperimentRunnerBase(object):
     def __init__(self, train_dataset, val_dataset, model, batch_size, num_epochs, num_data_loader_workers=10, log_validation=False):
         self._model = model
         self._num_epochs = num_epochs
-        self._log_freq = 10  # Steps
+        self._log_freq = 2  # Steps
         self._test_freq = 250  # Steps
 
         self._train_dataset_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_data_loader_workers)
@@ -36,19 +36,33 @@ class ExperimentRunnerBase(object):
         """
         raise NotImplementedError()
 
-    def validate(self):
+    def accuracy(self,logits, y):
+        _, preds = torch.max(logits, 1)
+        return (preds == y).float().mean()
+
+    def validate(self,current_step):
         ############ 2.8 TODO
         # Should return your validation accuracy
-
+        num_batches_to_validate = 1   #This is for faster debugging. Remove Later
+        net_validation_loss = 0     
+        net_validation_accuracy = 0                                 
+        for batch_id, batch_data in enumerate(self._val_dataset_loader):
+            if(batch_id>=num_batches_to_validate):
+                break
+            predicted_answer = self._model(batch_data['image'],batch_data['questions']) # TODO
+            ground_truth_answer = self.get_most_voted_answer(batch_data['answers']) 
+            net_validation_loss += self._optimize(predicted_answer, ground_truth_answer)
+            net_validation_accuracy += self.accuracy(predicted_answer,ground_truth_answer)
         ############
-
+        avg_validation_loss = net_validation_loss/num_batches_to_validate
+        avg_validation_accuracy = net_validation_accuracy/num_batches_to_validate
         if self._log_validation:
             ############ 2.9 TODO
             # you probably want to plot something here
-            pass
-
+            print("In log validation")
+            self.writer .add_scalar('Average_Validation/Loss', avg_validation_loss, current_step)
             ############
-        raise NotImplementedError()
+        return avg_validation_accuracy
 
     def get_most_voted_answer(self,answers):
         '''
@@ -82,18 +96,19 @@ class ExperimentRunnerBase(object):
                     print("Epoch: {}, Batch {}/{} has loss {}".format(epoch, batch_id, num_batches, loss))
                     ############ 2.9 TODO
                     # you probably want to plot something here
-
+                    self.writer.add_scalar('Train/Loss', loss, current_step)
                     ############
 
-                # if current_step % self._test_freq == 0:
-                #     self._model.eval()
-                #     val_accuracy = self.validate()
-                #     print("Epoch: {} has val accuracy {}".format(epoch, val_accuracy))
-                #     ############ 2.9 TODO
-                #     # you probably want to plot something here
-
-                #     ############
+                if current_step % self._test_freq == 0:
+                    self._model.eval()
+                    val_accuracy = self.validate(current_step)
+                    print("Epoch: {} has val accuracy {}".format(epoch, val_accuracy))
+                    ############ 2.9 TODO
+                    # you probably want to plot something here
+                    self.writer .add_scalar('Average_Validation/Accuracy', val_accuracy, current_step)
+                    ############
 
                 if (epoch+1) % self.lr_decay_freq==0:
+                    print("Decreasing lr")
                     for param_group in self.optimizer.param_groups:
                         param_group['lr'] = param_group['lr'] * self.lr_decrease_factor

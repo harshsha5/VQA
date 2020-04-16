@@ -16,7 +16,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
     """
     def __init__(self, train_image_dir, train_question_path, train_annotation_path,
                  test_image_dir, test_question_path,test_annotation_path, batch_size, num_epochs,
-                 num_data_loader_workers, cache_location, lr, log_validation):
+                 num_data_loader_workers, cache_location, lr, log_validation,writer):
 
         ############ 2.3 TODO: set up transform
 
@@ -39,7 +39,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         val_dataset = VqaDataset(image_dir=test_image_dir,
                                  question_json_file_path=test_question_path,
                                  annotation_json_file_path=test_annotation_path,
-                                 image_filename_pattern="COCO_val2014_{}.jpg",
+                                 image_filename_pattern="COCO_train2014_{}.jpg", #image_filename_pattern="COCO_val2014_{}.jpg",
                                  transform=transform,
                                  ############ 2.4 TODO: fill in the arguments
                                  question_word_to_id_map=train_dataset.question_word_to_id_map,
@@ -64,6 +64,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         self.word_embedding_layer_weight_threshold = 1500
         self.lr_decrease_factor = 0.1
         self.lr_decay_freq = 5
+        self.writer=writer
 
     def _optimize(self, predicted_answers, true_answer_ids):
         ############ 2.7 TODO: compute the loss, run back propagation, take optimization step.
@@ -74,4 +75,5 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         self.optimizer.step()
         self._model.get_word_embedding.weight.data.clamp_(min=-1*self.word_embedding_layer_weight_threshold, max=self.word_embedding_layer_weight_threshold)
         self._model.fc.weight.data.clamp_(min=-1*self.softmax_weight_threshold, max=self.softmax_weight_threshold)
+        return loss
         ############
