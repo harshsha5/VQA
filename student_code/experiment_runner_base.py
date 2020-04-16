@@ -112,3 +112,5 @@ class ExperimentRunnerBase(object):
                     print("Decreasing lr")
                     for param_group in self.optimizer.param_groups:
                         param_group['lr'] = param_group['lr'] * self.lr_decrease_factor
+
+            torch.save(self._model.state_dict(), self.MODEL_SAVE_PATH)

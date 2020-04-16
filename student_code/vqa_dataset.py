@@ -13,6 +13,16 @@ def convert_to_dict(tuple_list):
         d[key] = i
     return d
 
+def save_dict2file(path,data):
+    try:
+        import cPickle as pickle
+    except ImportError:  # python 3.x
+        import pickle
+
+    with open(path, 'wb') as fp:
+        pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+    print("dictionary saved!")
+
 class VqaDataset(Dataset):
     """
     Load the VQA dataset using the VQA python API. We provide the necessary subset in the External folder, but you may
@@ -39,6 +49,8 @@ class VqaDataset(Dataset):
         self.qIDs = self._vqa.getQuesIds()
         # self.imIDs = self._vqa.getImgIds()
         self.image_id_net_length = 12           #Check if this is the correct method
+        self.question_dict_path = "Saved_Models/question_dict"
+        self.answer_dict_path = "Saved_Models/answer_dict"
 
         # Publicly accessible dataset parameters
         self.question_word_list_length = question_word_list_length + 1
@@ -69,6 +81,7 @@ class VqaDataset(Dataset):
                 question_list.append(self._vqa.qqa[question_id]['question'])
             word_list = self._create_word_list(question_list)
             self.question_word_to_id_map = self._create_id_map(word_list,self.question_word_list_length)
+            save_dict2file(self.question_dict_path,self.question_word_to_id_map)
             ############
         else:
             self.question_word_to_id_map = question_word_to_id_map
@@ -82,6 +95,7 @@ class VqaDataset(Dataset):
                     answer_list.append(ans['answer'])
             answer_list = self._clean_sentences(answer_list)       
             self.answer_to_id_map = self._create_id_map(answer_list,self.answer_list_length)
+            save_dict2file(self.answer_dict_path,self.answer_to_id_map)
             ############
         else:
             self.answer_to_id_map = answer_to_id_map

@@ -16,7 +16,8 @@ if __name__ == "__main__":
     parser.add_argument('--test_question_path', type=str)
     parser.add_argument('--test_annotation_path', type=str)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--num_epochs', type=int, default=20)
+    parser.add_argument('--num_epochs', type=int, default=10)
+    parser.add_argument('--use_saved_dictionaries', type=int, default=0)
     parser.add_argument('--num_data_loader_workers', type=int, default=10)
     parser.add_argument('--cache_location', type=str, default="")
     parser.add_argument('--lr', type=float, default=4e-4)
@@ -46,6 +47,7 @@ if __name__ == "__main__":
                                                 cache_location=args.cache_location,
                                                 lr=args.lr,
                                                 log_validation=args.log_validation,
-                                                writer=writer)
+                                                writer=writer,
+                                                use_saved_dictionaries=args.use_saved_dictionaries)
     experiment_runner.train()
     writer.close()

@@ -8,7 +8,13 @@ from torchvision import transforms as transforms
 import torch
 import torch.nn.functional as F
 import ipdb
+import pickle
 
+def load_dict(path):
+  with open(path, 'rb') as fp:
+    var = pickle.load(fp)
+  print("Dictionary Loaded")
+  return var
 
 class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
     """
@@ -16,13 +22,23 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
     """
     def __init__(self, train_image_dir, train_question_path, train_annotation_path,
                  test_image_dir, test_question_path,test_annotation_path, batch_size, num_epochs,
-                 num_data_loader_workers, cache_location, lr, log_validation,writer):
+                 num_data_loader_workers, cache_location, lr, log_validation,writer,use_saved_dictionaries):
 
         ############ 2.3 TODO: set up transform
 
         transform = transforms.Compose([transforms.Resize((224, 224)),
                                         transforms.ToTensor(),
                                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+        ############
+        if(int(use_saved_dictionaries)==1):
+          self.question_dict_path = "Saved_Models/question_dict"
+          self.answer_dict_path = "Saved_Models/answer_dict"
+          question_word_to_id_map = load_dict(self.question_dict_path)
+          answer_to_id_map = load_dict(self.answer_dict_path)
+        else:
+          question_word_to_id_map = None
+          answer_to_id_map = None
 
         ############
 
@@ -32,8 +48,8 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
                                    image_filename_pattern="COCO_train2014_{}.jpg",
                                    transform=transform,
                                    ############ 2.4 TODO: fill in the arguments
-                                   question_word_to_id_map=None,                  #Change Later
-                                   answer_to_id_map=None,                         #Change Later
+                                   question_word_to_id_map=question_word_to_id_map,                  #Change Later
+                                   answer_to_id_map=answer_to_id_map,                         #Change Later
                                    ############
                                    )
         val_dataset = VqaDataset(image_dir=test_image_dir,
@@ -65,6 +81,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         self.lr_decrease_factor = 0.1
         self.lr_decay_freq = 5
         self.writer=writer
+        self.MODEL_SAVE_PATH = "Saved_Models/VQA_saved_model"
 
     def _optimize(self, predicted_answers, true_answer_ids):
         ############ 2.7 TODO: compute the loss, run back propagation, take optimization step.
