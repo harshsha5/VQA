@@ -2,6 +2,7 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch
 from collections import Counter
+import random
 import ipdb
 
 
@@ -15,7 +16,7 @@ class ExperimentRunnerBase(object):
         self._model = model
         self._num_epochs = num_epochs
         self._log_freq = 10  # Steps
-        self._test_freq = 250  # Steps
+        self._test_freq = 400  # Steps
 
         self._train_dataset_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_data_loader_workers)
 
@@ -43,16 +44,20 @@ class ExperimentRunnerBase(object):
     def validate(self,current_step):
         ############ 2.8 TODO
         # Should return your validation accuracy
-        num_batches_to_validate = 1   #This is for faster debugging. Remove Later
-        net_validation_loss = 0     
-        net_validation_accuracy = 0                                 
+        num_batches_to_validate = 20   #This is for faster debugging. Remove Later
+        batch_end_point = 100
+        net_validation_loss = 0
+        net_validation_accuracy = 0
+        randomly_selected_batches = [random.randint(0,batch_end_point) for _ in range(num_batches_to_validate)] #Randomly select 30 V batches
         for batch_id, batch_data in enumerate(self._val_dataset_loader):
-            if(batch_id>=num_batches_to_validate):
+            if(batch_id>batch_end_point):
                 break
+            if(batch_id not in randomly_selected_batches):
+                continue
             predicted_answer = self._model(batch_data['image'].to(self.device),batch_data['questions'].to(self.device)) # TODO
             ground_truth_answer = self.get_most_voted_answer(batch_data['answers'].to(self.device)) 
-            net_validation_loss += self._optimize(predicted_answer, ground_truth_answer)
-            net_validation_accuracy += self.accuracy(predicted_answer,ground_truth_answer)
+            net_validation_loss += self._optimize(predicted_answer, ground_truth_answer).cpu()
+            net_validation_accuracy += self.accuracy(predicted_answer,ground_truth_answer).cpu()
         ############
         avg_validation_loss = net_validation_loss/num_batches_to_validate
         avg_validation_accuracy = net_validation_accuracy/num_batches_to_validate
