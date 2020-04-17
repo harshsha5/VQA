@@ -5,7 +5,9 @@ import re
 from collections import Counter
 from PIL import Image
 import torchvision
+import os
 import ipdb
+import numpy as np
 
 def convert_to_dict(tuple_list):
     d = {}
@@ -245,9 +247,21 @@ class VqaDataset(Dataset):
         if self._cache_location is not None and self._pre_encoder is not None:
             ############ 3.2 TODO
             # implement your caching and loading logic here
-
+            encode_path = self._cache_location + '/' + image_name + '.npz'
+            try:
+                img = np.load(encode_path)['img']
+            except FileNotFoundError:  
+                fpath = self._image_dir + "/" + self._image_filename_pattern.replace("{}", str(image_name))
+                img = Image.open(fpath)
+                img =  img.convert("RGB")
+                if(self._transform is not None):
+                    img = self._transform(img)       #Make sure to_tensor is in the transform function
+                else:
+                    img = torchvision.transforms.ToTensor()(img)
+                img = self._pre_encoder(img.unsqueeze(0))
+                np.savez_compressed(encode_path, img=img.detach().numpy())
             ############
-            raise NotImplementedError()
+            #raise NotImplementedError()
         else:
             ############ 1.9 TODO
             # load the image from disk, apply self._transform (if not None)

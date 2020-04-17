@@ -1,6 +1,10 @@
 from student_code.coattention_net import CoattentionNet
 from student_code.experiment_runner_base import ExperimentRunnerBase
 from student_code.vqa_dataset import VqaDataset
+import torchvision.models as models
+from torchvision import transforms as transforms
+import os
+import torch.nn as nn
 
 
 class CoattentionNetExperimentRunner(ExperimentRunnerBase):
@@ -9,15 +13,24 @@ class CoattentionNetExperimentRunner(ExperimentRunnerBase):
     """
     def __init__(self, train_image_dir, train_question_path, train_annotation_path,
                  test_image_dir, test_question_path,test_annotation_path, batch_size, num_epochs,
-                 num_data_loader_workers, cache_location, lr, log_validation):
+                 num_data_loader_workers, cache_location, lr, log_validation,writer,use_saved_dictionaries,device):
 
         ############ 3.1 TODO: set up transform and image encoder
-        transform = None
-        image_encoder = None
+        transform = transforms.Compose([transforms.Resize((448, 448)),
+                                        transforms.ToTensor(),
+                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        image_encoder = models.resnet18(pretrained=True)
+        image_encoder.eval()
+        modules=list(image_encoder.children())[:-2]
+        image_encoder=nn.Sequential(*modules)
+        for p in image_encoder.parameters():
+            p.requires_grad = False
         ############ 
 
         question_word_list_length = 5746
         answer_list_length = 1000
+
+        self.device=device
 
         train_dataset = VqaDataset(image_dir=train_image_dir,
                                    question_json_file_path=train_question_path,
