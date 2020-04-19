@@ -25,6 +25,9 @@ if __name__ == "__main__":
     parser.add_argument('--log_validation', action='store_true')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
+    parser.add_argument('--eval_model', action='store_true', default=False,
+                        help='Evaluate Model instead of Training')
+    parser.add_argument('--model_eval_path', type=str)
     args = parser.parse_args()
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -56,5 +59,13 @@ if __name__ == "__main__":
                                                 writer=writer,
                                                 use_saved_dictionaries=args.use_saved_dictionaries,
                                                 device=device)
-    experiment_runner.train()
+
+    if(args.eval_model is False):
+        experiment_runner.train()
+    else:
+        print("Evaluating model")
+        experiment_runner._model.load_state_dict(torch.load(args.model_eval_path))
+        experiment_runner._model.eval()
+        experiment_runner.validate(current_step = 0)
+        
     writer.close()
