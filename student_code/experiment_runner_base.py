@@ -17,6 +17,7 @@ class ExperimentRunnerBase(object):
         self._num_epochs = num_epochs
         self._log_freq = 10  # Steps
         self._test_freq = 400  # Steps
+        self._batch_size = batch_size
 
         self._train_dataset_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_data_loader_workers)
 
@@ -41,6 +42,18 @@ class ExperimentRunnerBase(object):
         _, preds = torch.max(logits, 1)
         return (preds == y).float().mean()
 
+    def get_question(self,question_one_hot):
+        stro = ''
+        for row in range(question_one_hot.shape[1]):
+           val,ind = torch.max(question_one_hot[0,row,:],dim=0)
+           if(val.item()!=1):
+              continue
+           else:
+              question_in_words = [key  for (key, value) in self.question_dictionary.items() if value == ind.item()]
+              if(len(question_in_words)!=0):
+                 stro+= question_in_words[0] + ' '
+        return stro + '?'
+
     def validate(self,current_step):
         ############ 2.8 TODO
         # Should return your validation accuracy
@@ -58,6 +71,16 @@ class ExperimentRunnerBase(object):
             ground_truth_answer = self.get_most_voted_answer(batch_data['answers'].to(self.device)) 
             net_validation_loss += self._optimize(predicted_answer, ground_truth_answer).cpu()
             net_validation_accuracy += self.accuracy(predicted_answer,ground_truth_answer).cpu()
+            if(self._batch_size==1):
+               _, preds = torch.max(predicted_answer, 1)
+               answer_pred_in_words = [key  for (key, value) in self.answer_dictionary.items() if value == preds.item()]
+               gt_pred_in_words = [key  for (key, value) in self.answer_dictionary.items() if value == ground_truth_answer.item()]
+               print(self.get_question(batch_data['questions']))
+               if(len(answer_pred_in_words) !=0):
+                    print("Predicted Answer: ",answer_pred_in_words[0])
+               if(len(gt_pred_in_words) !=0):
+                    print("Ground_Truth Answer: ",gt_pred_in_words[0])
+               print("=========================================================")
         ############
         avg_validation_loss = net_validation_loss/num_batches_to_validate
         avg_validation_accuracy = net_validation_accuracy/num_batches_to_validate

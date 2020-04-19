@@ -83,6 +83,8 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
         self.lr_decay_freq = 5
         self.writer=writer
         self.MODEL_SAVE_PATH = "Saved_Models/VQA_saved_model"
+        self.question_dictionary = train_dataset.question_word_to_id_map
+        self.answer_dictionary = train_dataset.answer_to_id_map
 
     def _optimize(self, predicted_answers, true_answer_ids):
         ############ 2.7 TODO: compute the loss, run back propagation, take optimization step.
