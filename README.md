@@ -1,4 +1,14 @@
-# Assignment 3: Visual Question Answering with PyTorch!
+Commands to Run:
+
+1. Go to VQA directory
+
+2. Simple Baseline Network: python -m student_code.main --train_image_dir student_code/Data/Images/train2014/ --train_question_path student_code/Data/Questions/OpenEnded_mscoco_train2014_questions.json --train_annotation_path student_code/Data/Answers/mscoco_train2014_annotations.json  --test_image_dir student_code/Data/Images/val2014/ --test_question_path student_code/Data/Questions/OpenEnded_mscoco_val2014_questions.json --test_annotation_path student_code/Data/Answers/mscoco_val2014_annotations.json --use_saved_dictionaries 0
+
+3. Coattention Network: python -m student_code.main --train_image_dir student_code/Data/Images/train2014/ --train_question_path student_code/Data/Questions/OpenEnded_mscoco_train2014_questions.json --train_annotation_path student_code/Data/Answers/mscoco_train2014_annotations.json  --test_image_dir student_code/Data/Images/val2014/ --test_question_path student_code/Data/Questions/OpenEnded_mscoco_val2014_questions.json --test_annotation_path student_code/Data/Answers/mscoco_val2014_annotations.json --use_saved_dictionaries 0 --model coattention
+
+Coded by: Harsh Sharma
+
+# Visual Question Answering with PyTorch!
 
 - [Visual Learning and Recognition (16-824) Spring 2020](https://sites.google.com/andrew.cmu.edu/16-824spring2020/)
 - Edited by: [Donglai Xiang](https://xiangdonglai.github.io/)

@@ -51,7 +51,7 @@ class CoattentionNetExperimentRunner(ExperimentRunnerBase):
                                  cache_location=os.path.join(cache_location, "tmp_val"),
                                  pre_encoder=image_encoder)
 
-        self._model = CoattentionNet()
+        self._model = CoattentionNet(train_dataset.question_word_list_length,train_dataset._max_question_length,embedding_length=512)
 
         super().__init__(train_dataset, val_dataset, self._model, batch_size, num_epochs,
                          num_data_loader_workers=num_data_loader_workers, log_validation=False)
